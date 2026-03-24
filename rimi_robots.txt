@@ -1,0 +1,14 @@
+User-agent: *
+Disallow: /admin/
+Disallow: /search?q=*
+Disallow: /checkout
+Disallow: /account
+Disallow: /cart/
+Sitemap: https://www.rimi.lv/sitemap.xml
+Sitemap: https://www.rimi.lv/e-veikals/sitemap.xml
+
+User-agent: AhrefsBot
+Allow: /
+
+User-agent: AhrefsSiteAudit
+Allow: /
