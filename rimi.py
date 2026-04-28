@@ -66,7 +66,7 @@ def iegut_produktus(html):
         if not nosaukums_klucis or not cena_klucis or not saite_klucis: ##erroru eksterminators
             continue
 
-        eiro  = cena_klucis.find('span')
+        eiro  = cena_klucis.find('span', attrs={'aria-hidden': 'true'})
         centi = cena_klucis.find('sup')
 
         nosaukums   = nosaukums_klucis.text
@@ -86,6 +86,9 @@ def aprekinat_vertibas(visi_produkti):
 
         alkohols = 0
         for vards in nosaukums.split():
+            if "100%" in vards or "100" == vards.replace('%', ''):
+                alkohols = 0
+                break
             if '%' in vards:
                 skaitlis = vards.replace('%', '').replace(',', '.').rstrip('.')
                 if skaitlis.replace('.', '').isdigit():

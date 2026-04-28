@@ -2,23 +2,22 @@ import webbrowser
 import os
 import json
 from datetime import datetime
-from concurrent.futures import ThreadPoolExecutor
-
+## importe musu rimi.py
 def iegut_rimi():
     import rimi
     return rimi.aprekinat_vertibas(rimi.visi_produkti)
-
+## importe musu barbora.py
 def iegut_barboru():
     import barbora
     return barbora.aprekinat_vertibas(barbora.visi_produkti)
 
-with ThreadPoolExecutor(max_workers=2) as executor:
-    rimi_future    = executor.submit(iegut_rimi)
-    barbora_future = executor.submit(iegut_barboru)
-    visi = rimi_future.result() + barbora_future.result()
+rimi_dati    = iegut_rimi()
+barbora_dati = iegut_barboru()
 
+visi = rimi_dati + barbora_dati
+# laiks priekš mājaslapas, lai lietotājs redzetu vai dati ir nesen atjaunoti
 laiks = datetime.now().strftime("%d.%m.%Y %H:%M")
-
+# kārtošana pēc vērtībām
 labakais = sorted(
     [v for v in visi if v['vertiba'] > 0],
     key=lambda x: x['vertiba'],
@@ -27,7 +26,7 @@ labakais = sorted(
 
 RIMI_LOGO   = 'https://upload.wikimedia.org/wikipedia/lv/thumb/c/c7/Rimi_Baltic_Logo.svg/1280px-Rimi_Baltic_Logo.svg.png'
 MAXIMA_LOGO = 'https://www.maxima.lv/images/front/logos/maxima.svg'
-
+#pec ka mainisies krasa majaslapam  kad hovero mouse
 KATEGORIJAS = [
     (['kokteilis', 'cocktail', 'spritz', 'lode ', 'shake club'],                                                        '#c03060'),
     (['sarkanv', 'merlot', 'cabernet', 'shiraz', 'malbec', 'chianti', 'rioja', 'pinot noir', 'tempranillo', 'sangiovese'], '#7a1520'),
@@ -58,12 +57,18 @@ def krasa_no_nosaukuma(nosaukums, alkohols):
     if alkohols >= 8:  return '#806020'
     if alkohols >= 4:  return '#b06810'
     return '#606060'
-
+# sagatavo produktu sarakstu html failam
 produkti_js = []
 for i, p in enumerate(labakais, 1):
-    veikals_att  = 'Maxima' if p['veikals'] == 'Barbora' else p['veikals']
-    logo          = RIMI_LOGO if p['veikals'] == 'Rimi' else MAXIMA_LOGO
-    veikals_krasa = '#e3000b' if p['veikals'] == 'Rimi' else '#004FE0'
+    veikals_att   = 'Maxima' if p['veikals'] == 'Barbora' else p['veikals']
+#kastītes krāsa
+    if p['veikals'] == 'Rimi':
+        logo          = RIMI_LOGO
+        veikals_krasa = '#e3000b'
+    else:
+        logo          = MAXIMA_LOGO
+        veikals_krasa = '#004FE0'
+#kastītes krāsa
     krasa         = krasa_no_nosaukuma(p['nosaukums'], p['alkohols'])
     produkti_js.append({
         'vieta':         i,
@@ -79,13 +84,14 @@ for i, p in enumerate(labakais, 1):
         'alkohols':      p['alkohols'],
         'tilpums':       p['tilpums']
     })
-
+#filtram
 max_cena     = max((p['cena']     for p in produkti_js), default=100)
 min_cena     = min((p['cena']     for p in produkti_js), default=0)
 max_alkohols = max((p['alkohols'] for p in produkti_js if p['alkohols'] > 0), default=96)
 min_alkohols = min((p['alkohols'] for p in produkti_js if p['alkohols'] > 0), default=0)
 max_tilpums  = max((p['tilpums']  for p in produkti_js if p['tilpums']  > 0), default=3)
 min_tilpums  = min((p['tilpums']  for p in produkti_js if p['tilpums']  > 0), default=0)
+# pārvērš par json lai varētu ielikt html failā kā javascript mainīgo
 produkti_json = json.dumps(produkti_js, ensure_ascii=False)
 
 html = f'''<!DOCTYPE html>
@@ -375,6 +381,9 @@ html = f'''<!DOCTYPE html>
         .veikals-poga.aktīva[data-veikals="Maxima"] {{
             border-color: #004FE0; background: #004FE0; color: #fff;
         }}
+        .veikals-poga.aktīva[data-veikals="SuperAlko"] {{
+            border-color: #f5a800; background: #f5a800; color: #fff;
+        }}
 
         .range-slider {{
             position: relative;
@@ -657,6 +666,12 @@ html = f'''<!DOCTYPE html>
         <a class="social-saite soundcloud" href="https://soundcloud.com/salsskabe" target="_blank">
             <img class="social-ikona" src="https://www.svgrepo.com/show/494355/soundcloud.svg" style="opacity:0.6;filter:saturate(0);">
             salsskabe
+        </a>
+        <a class="social-saite instagram" href="https://www.instagram.com/ikristapsons08/" target="_blank">
+            <svg class="social-ikona" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor"/>
+            </svg>
+            ikristapsons08
         </a>
     </div>
 
@@ -998,7 +1013,7 @@ html = f'''<!DOCTYPE html>
     </script>
 </body>
 </html>'''
-
+#automatiski atver musu majaslapu 
 fails = os.path.abspath('rezultati.html')
 with open(fails, 'w', encoding='utf-8') as f:
     f.write(html)

@@ -117,6 +117,9 @@ def aprekinat_vertibas(visi_produkti):
 
         alkohols = 0
         for vards in nosaukums.split():
+            if "100%" in vards or "100" == vards.replace('%', ''):
+                alkohols = 0
+                break
             if '%' in vards:
                 skaitlis = vards.replace('%', '').replace(',', '.').rstrip('.')
                 if skaitlis.replace('.', '').isdigit():
